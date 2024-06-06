@@ -95,7 +95,8 @@ print(f"Number of addresses: {n:,}")
 pd.options.display.max_colwidth = 1000
 
 sql = """
-select COALESCE(unit, '') || ' ' ||
+with a as (
+select distinct COALESCE(unit, '') || ' ' ||
     COALESCE(flats, '') || ' ' ||
     COALESCE(housename, '') || ' ' ||
     COALESCE(housenumber, '') || ' ' ||
@@ -103,15 +104,31 @@ select COALESCE(unit, '') || ' ' ||
     COALESCE(street, '') || ' ' ||
     COALESCE(parentstreet, '') || ' ' ||
     COALESCE(suburb, '') || ' ' ||
-    COALESCE(city, '')  as full_address
+    COALESCE(city, '')  || ' ' ||
+    COALESCE(postcode, '')
+    as full_address
     , *
 
 from read_parquet('open_streetmap_addresess.parquet')
--- where housename is not null and housenumber is not null
--- where building = 'apartments'
--- where postcode = 'SE15 2RS'
+)
+select * exclude (full_address)
+from a
+
 
 """
 
-ddff = duckdb.sql(sql).df()
-ddff
+df_with_full = duckdb.sql(sql)
+
+sql = """
+COPY df_with_full
+TO 'open_streetmap_addresses_deduped_1379571.parquet' (FORMAT PARQUET);
+"""
+
+duckdb.sql(sql)
+sql = """
+select *
+from read_parquet('open_streetmap_addresses_deduped_1379571.parquet')
+where unit is not null
+limit 10
+"""
+duckdb.sql(sql).df().head()
