@@ -1,8 +1,20 @@
 # ref https://wiki.openstreetmap.org/wiki/Addresses_in_the_United_Kingdom
 
 # Download the latest OSM data for Great Britain from https://download.geofabrik.de/europe/great-britain.html
-# osmium tags-filter --overwrite -o england-addresses.osm.pbf great-britain-latest.osm.pbf nwr/addr:housenumber
-# osmium export england-addresses.osm.pbf -o england-addresses.geojsonseq --output-format=geojsonseq
+
+# osmium tags-filter \
+#   --overwrite \
+#   -o england-addresses.osm.pbf \
+#   great-britain-latest.osm.pbf \
+#   nwr/addr:postcode
+
+# osmium export \
+# --config=config.json \
+# --overwrite \
+# --output=england-addresses.geojsonseq \
+# --output-format=geojsonseq \
+# england-addresses.osm.pbf
+
 
 import duckdb
 import pandas as pd
@@ -96,9 +108,10 @@ select COALESCE(unit, '') || ' ' ||
 
 from read_parquet('open_streetmap_addresess.parquet')
 -- where housename is not null and housenumber is not null
-where building = 'apartments'
+-- where building = 'apartments'
+-- where postcode = 'SE15 2RS'
 
 """
 
 ddff = duckdb.sql(sql).df()
-len(ddff)
+ddff

@@ -1,0 +1,18 @@
+{
+  "attributes": {
+      "id": true
+  },
+  "include_tags": [
+      "addr:unit",
+      "addr:flats",
+      "addr:housename",
+      "addr:housenumber",
+      "addr:substreet",
+      "addr:street",
+      "addr:parentstreet",
+      "addr:suburb",
+      "addr:city",
+      "addr:postcode",
+      "building"
+  ]
+}
