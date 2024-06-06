@@ -63,7 +63,7 @@ and
 """
 open_streetmap_addresess = duckdb.sql(query)
 
-# Write out to parquet
+# Write out to parquet - takes about 10 mins
 sql = """
 COPY open_streetmap_addresess
 TO 'open_streetmap_addresess.parquet' (FORMAT PARQUET);
