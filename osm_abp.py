@@ -1,3 +1,4 @@
+# Aim: Get a list of messy addresses from OSM and their corresponding canonical addresses to measure performance of address matching.
 import duckdb
 
 OS_PARQUET_PATH = "/Users/robin.linacre/Documents/data_linking/uk_address_matcher/secret_data/ord_surv/raw/add_gb_builtaddress_sorted_zstd.parquet"
@@ -67,4 +68,15 @@ join_sql = f"""
     JOIN unique_matches u USING (osm_id)
 """
 
-duckdb.sql(join_sql).show(max_width=10000)
+result = duckdb.sql(join_sql)
+result.show(max_width=10000)
+
+output_path = "os_vs_osm_matched.parquet"
+
+
+result.to_parquet(output_path)
+
+duckdb.sql(f"SELECT COUNT(*) AS row_count FROM read_parquet('{output_path}')").show()
+duckdb.sql(
+    f"SELECT * FROM read_parquet('{output_path}') ORDER BY random() LIMIT 10"
+).show(max_width=10000)
