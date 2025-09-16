@@ -43,14 +43,14 @@ join_sql = f"""
                  ST_Distance(os.os_geom, osm.osm_geom) AS distance_m
              FROM osm
              JOIN os
-               ON ST_DWithin(os.os_geom, osm.osm_geom, 5)
+               ON ST_DWithin(os.os_geom, osm.osm_geom, 10)
          ),
          unique_matches AS (
              SELECT
                  osm_id
              FROM matches
              GROUP BY osm_id
-             HAVING COUNT(*) = 1
+             HAVING COUNT(*) = 1 AND MIN(distance_m) <= 1
          )
     SELECT
         m.osm_id,
