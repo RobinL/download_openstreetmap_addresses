@@ -51,7 +51,7 @@ join_sql = f"""
                  osm_id
              FROM matches
              GROUP BY osm_id
-             HAVING COUNT(*) = 1 AND MIN(distance_m) <= 1
+             HAVING COUNT(*) = 1 AND MIN(distance_m) <= 2
          )
     SELECT
         m.osm_id,
@@ -69,7 +69,6 @@ join_sql = f"""
 """
 
 result = duckdb.sql(join_sql)
-result.show(max_width=10000)
 
 output_path = "os_vs_osm_matched.parquet"
 
