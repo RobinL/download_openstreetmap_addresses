@@ -79,3 +79,5 @@ duckdb.sql(f"SELECT COUNT(*) AS row_count FROM read_parquet('{output_path}')").s
 duckdb.sql(
     f"SELECT * FROM read_parquet('{output_path}') ORDER BY random() LIMIT 10"
 ).show(max_width=10000)
+
+# Use our exact matcher to skim off the exact ones, then human/LLM review to decide the rest?
