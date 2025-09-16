@@ -43,7 +43,11 @@ con.execute("INSTALL spatial; LOAD spatial;")
 # 1) read NDJSON (one Feature per line)
 raw = con.sql("""
 
-SELECT * FROM read_json_auto('gb_addr.ndjsonl', format='newline_delimited');
+SELECT * FROM read_json_auto('gb_addr.ndjsonl', format='newline_delimited',   columns = {
+    'type': 'VARCHAR',
+    'geometry': 'JSON',
+    'properties': 'JSON'
+  });
 """)
 raw.limit(2).show(max_width=10000)
 
@@ -52,28 +56,21 @@ raw.limit(2).show(max_width=10000)
 features = con.sql("""
 
 SELECT
-  CASE
-    WHEN geometry.type = 'Point' THEN
-      ST_Point(
-        geometry.coordinates[1]::DOUBLE,
-        geometry.coordinates[2]::DOUBLE
-      )
-    ELSE
-      -- for Polygon/MultiPolygon/etc: serialize STRUCT -> JSON string
-      ST_GeomFromGeoJSON(CAST(to_json(geometry) AS VARCHAR))
-  END AS geom,
+  ST_GeomFromGeoJSON(CAST(geometry AS VARCHAR)) AS geom,
   properties
 FROM raw;
 """)
 
 features.limit(2).show(max_width=10000)
 
+
 # 3) representative point for polygons (point-on-surface), original for points
 features_pt = con.sql("""
 SELECT
-  CASE WHEN ST_GeometryType(geom)::varchar LIKE '%POLYGON%'
-       THEN ST_PointOnSurface(geom)
-       ELSE geom
+ CASE
+    WHEN st_geometrytype(geom) = 'POINT'
+      THEN geom
+    ELSE st_pointonsurface(geom)
   END AS geom,
   properties
 FROM features;
@@ -127,12 +124,11 @@ SELECT
         NULLIF(county, '')
     ) AS full_address,
     postcode,
-    lat, lon
+    lat, lon, building_tag
 FROM gb_osm_addresses
 WHERE
     (housenumber IS NOT NULL OR housename IS NOT NULL OR unit IS NOT NULL)
     AND (thoroughfare IS NOT NULL)
-limit 100
 """)
 
 
@@ -143,3 +139,14 @@ full_addresses.limit(10).show(max_width=10000)
 con.sql("""
 COPY full_addresses TO 'all_uk_addresses_osm.parquet' (FORMAT PARQUET);
 """)
+
+
+read_from_parquet = con.read_parquet("all_uk_addresses_osm.parquet")
+
+sql = """
+select *
+from read_from_parquet
+order by random()
+limit 10
+"""
+con.sql(sql).show(max_width=10000)
