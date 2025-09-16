@@ -53,7 +53,16 @@ join_sql = f"""
              HAVING COUNT(*) = 1
          )
     SELECT
-        m.*
+        m.osm_id,
+        m.uprn,
+        m.full_address AS full_address_osm,
+        m.fulladdressnopc AS full_address_os,
+        m.osm_postcode AS postcode_osm,
+        m.os_postcode AS postcode_os,
+        m.osm_lat AS lat_osm,
+        m.os_lat AS lat_os,
+        m.osm_lon AS lon_osm,
+        m.os_lon AS lon_os
     FROM matches m
     JOIN unique_matches u USING (osm_id)
 """
